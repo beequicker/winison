@@ -8,15 +8,20 @@ import win32com.client
 def create(parent):
     return frameSetup(parent)
 
-[wxID_FRAMESETUP, wxID_FRAMESETUPBUTTONBROWSE1, wxID_FRAMESETUPBUTTONBROWSE2, 
- wxID_FRAMESETUPBUTTONDELETE, wxID_FRAMESETUPBUTTONLOAD, 
- wxID_FRAMESETUPBUTTONSAVE, wxID_FRAMESETUPCOMBOBOXPROFILES, 
- wxID_FRAMESETUPSTATICTEXT1, wxID_FRAMESETUPSTATICTEXT2, 
- wxID_FRAMESETUPSTATICTEXT3, wxID_FRAMESETUPTEXTOPTIONS, 
- wxID_FRAMESETUPTEXTROOT1, wxID_FRAMESETUPTEXTROOT2, 
+[wxID_FRAMESETUP, wxID_FRAMESETUPBUTTONBROWSE1, wxID_FRAMESETUPBUTTONBROWSE2,
+ wxID_FRAMESETUPBUTTONDELETE, wxID_FRAMESETUPBUTTONLOAD,
+ wxID_FRAMESETUPBUTTONSAVE, wxID_FRAMESETUPCOMBOBOXPROFILES,
+ wxID_FRAMESETUPSTATICTEXT1, wxID_FRAMESETUPSTATICTEXT2,
+ wxID_FRAMESETUPSTATICTEXT3, wxID_FRAMESETUPTEXTOPTIONS,
+ wxID_FRAMESETUPTEXTROOT1, wxID_FRAMESETUPTEXTROOT2,
 ] = [wx.NewId() for _init_ctrls in range(13)]
 
 class frameSetup(wx.Frame):
+
+    # paths assembled in LoadUp
+    dot_unison = None
+    sendto     = None
+
     def _init_ctrls(self, prnt):
         # generated method, don't edit
         wx.Frame.__init__(self, id=wxID_FRAMESETUP, name='frameSetup',
@@ -130,8 +135,8 @@ class frameSetup(wx.Frame):
         """
         Converts profile name to a path.
         """
-        return os.path.join(os.environ['HOMEDRIVE'], 
-                            os.environ['HOMEPATH'], 
+        return os.path.join(os.environ['HOMEDRIVE'],
+                            os.environ['HOMEPATH'],
                             ".unison",
                             prf_name+".prf")
 
@@ -142,11 +147,11 @@ class frameSetup(wx.Frame):
         the various profile files of Unison, creates directories if they don't
         exist, and so forth. It clears out the GUI and repopulates it.
         """
-        
+
         # clear out the GUI
         self.ClearGUI()
-        
-        
+
+
 
         # First see if the important directories exist!
 
@@ -154,26 +159,26 @@ class frameSetup(wx.Frame):
         if not os.environ.has_key("HOMEDRIVE") or not os.environ.has_key("HOMEPATH"):
             self.Error("No HOMEDRIVE or HOMEPATH environment variable!\n\n"+str(os.environ.keys()))
             return False
-        dot_unison = os.path.join(os.environ["HOMEDRIVE"],os.environ["HOMEPATH"],".unison")
-        if not os.path.exists(dot_unison): os.mkdir(dot_unison)
+        self.dot_unison = os.path.join(os.environ["HOMEDRIVE"],os.environ["HOMEPATH"],".unison")
+        if not os.path.exists(self.dot_unison): os.mkdir(self.dot_unison)
 
         # User/SendTo
-        sendto = os.path.join(os.environ["HOMEDRIVE"], os.environ["HOMEPATH"], "SendTo")
-        if not os.path.exists(sendto):
-            self.Error("Path "+sendto+" does not exist! This is really weird.")
+        self.sendto = os.path.join(os.environ["HOMEDRIVE"], os.environ["HOMEPATH"], "SendTo")
+        if not os.path.exists(self.sendto):
+            self.Error("Path "+self.sendto+" does not exist! This is really weird.")
             return False
 
-    
-    
+
+
         # search for *.prf files
         prf_paths = glob.glob(os.path.join(dot_unison,"*.prf"))
-        
+
         # populate the combo box
         for p in prf_paths:
             # get the name of the prefs and append it
             prf_name = self.PrfPathToName(p)
             self.comboBoxProfiles.Append(prf_name)
-        
+
         # select the first one
 
 
@@ -196,19 +201,19 @@ class frameSetup(wx.Frame):
         # Find the prf file and load it.
         prf_name = self.comboBoxProfiles.GetValue()
         if prf_name == "": return
-        
+
         # read in all the lines
         f = open(self.PrfNameToPath(prf_name))
         lines = f.readlines()
         f.close()
-        
+
         # now loop over the lines, filling in the GUI
         roots = 0
         for line in lines:
-            
+
             # split the line by the "=" sign
             s = line.split("=")
-            
+
             # if we have an important line:
             if len(s) == 2:
                 # if we found a root argument fill the upper GUI
@@ -216,7 +221,7 @@ class frameSetup(wx.Frame):
                     if   roots == 0: self.textRoot1.SetValue(s[1].strip())
                     elif roots == 1: self.textRoot2.SetValue(s[1].strip())
                     roots = roots+1
-                    
+
                 # otherwise fill the lower GUI
                 else:
                     self.textOptions.AppendText(line)
@@ -225,7 +230,11 @@ class frameSetup(wx.Frame):
 
 
     def OnButtonSave(self, event):
-        event.Skip()
+        """
+        Saves the currently-visible data to the various system files and generates
+        the appropriate windows batch files.
+        """
+
 
     def OnButtonDelete(self, event):
         event.Skip()
@@ -235,7 +244,7 @@ class frameSetup(wx.Frame):
 
     def OnButtonBrowse2(self, event):
         event.Skip()
-        
+
 
 
 
