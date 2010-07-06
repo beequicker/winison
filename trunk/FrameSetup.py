@@ -8,12 +8,12 @@ import win32com.client
 def create(parent):
     return frameSetup(parent)
 
-[wxID_FRAMESETUP, wxID_FRAMESETUPBUTTONBROWSE1, wxID_FRAMESETUPBUTTONBROWSE2,
- wxID_FRAMESETUPBUTTONDELETE, wxID_FRAMESETUPBUTTONLOAD,
- wxID_FRAMESETUPBUTTONSAVE, wxID_FRAMESETUPCOMBOBOXPROFILES,
- wxID_FRAMESETUPSTATICTEXT1, wxID_FRAMESETUPSTATICTEXT2,
- wxID_FRAMESETUPSTATICTEXT3, wxID_FRAMESETUPTEXTOPTIONS,
- wxID_FRAMESETUPTEXTROOT1, wxID_FRAMESETUPTEXTROOT2,
+[wxID_FRAMESETUP, wxID_FRAMESETUPBUTTONBROWSE1, wxID_FRAMESETUPBUTTONBROWSE2, 
+ wxID_FRAMESETUPBUTTONDELETE, wxID_FRAMESETUPBUTTONLOAD, 
+ wxID_FRAMESETUPBUTTONSAVE, wxID_FRAMESETUPCOMBOBOXPROFILES, 
+ wxID_FRAMESETUPSTATICTEXT1, wxID_FRAMESETUPSTATICTEXT2, 
+ wxID_FRAMESETUPSTATICTEXT3, wxID_FRAMESETUPTEXTOPTIONS, 
+ wxID_FRAMESETUPTEXTROOT1, wxID_FRAMESETUPTEXTROOT2, 
 ] = [wx.NewId() for _init_ctrls in range(13)]
 
 class frameSetup(wx.Frame):
@@ -151,8 +151,6 @@ class frameSetup(wx.Frame):
         # clear out the GUI
         self.ClearGUI()
 
-
-
         # First see if the important directories exist!
 
         # User/.unison
@@ -171,7 +169,7 @@ class frameSetup(wx.Frame):
 
 
         # search for *.prf files
-        prf_paths = glob.glob(os.path.join(dot_unison,"*.prf"))
+        prf_paths = glob.glob(os.path.join(self.dot_unison,"*.prf"))
 
         # populate the combo box
         for p in prf_paths:
@@ -234,17 +232,50 @@ class frameSetup(wx.Frame):
         Saves the currently-visible data to the various system files and generates
         the appropriate windows batch files.
         """
+        
+        # Get whatever garbage the user has typed in there.
+        prf_name    = self.comboBoxProfiles.GetValue()
+        
+        # if it's a new value, append it!
+        if not prf_name in self.comboBoxProfiles.GetStrings():
+            self.comboBoxProfiles.Append(prf_name)
+            
+        # get the output path.
+        output_path = self.PrfNameToPath(self.comboBoxProfiles.GetValue())
+        
+        f = open(output_path, 'w')
+        f.write('root = ' + self.textRoot1.GetValue() + '\n')
+        f.write('root = ' + self.textRoot2.GetValue() + '\n')
+        f.write(self.textOptions.GetValue() + '\n')
+        f.close()
+        
+
 
 
     def OnButtonDelete(self, event):
-        event.Skip()
+        # Get whatever garbage the user has typed in there.
+        prf_name    = self.comboBoxProfiles.GetValue()
+        prf_names   = self.comboBoxProfiles.GetStrings()
+        
+        if prf_name in prf_names:
+            i = prf_names.index(prf_name)
+            self.comboBoxProfiles.Delete(i)
+        
+        # now also remove the actual file
+        os.remove(self.PrfNameToPath(prf_name))
+        
 
     def OnButtonBrowse1(self, event):
-        event.Skip()
-
+        d = wx.DirDialog(self)
+        if d.ShowModal() == 5100:
+            self.textRoot1.SetValue(d.GetPath())
+        
     def OnButtonBrowse2(self, event):
-        event.Skip()
+        d = wx.DirDialog(self)
+        if d.ShowModal() == 5100:
+            self.textRoot2.SetValue(d.GetPath())
 
+    
 
 
 
