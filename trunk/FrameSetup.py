@@ -140,6 +140,7 @@ class frameSetup(wx.Frame):
                             ".unison",
                             prf_name+".prf")
 
+    
 
     def LoadUp(self):
         """
@@ -240,16 +241,61 @@ class frameSetup(wx.Frame):
         if not prf_name in self.comboBoxProfiles.GetStrings():
             self.comboBoxProfiles.Append(prf_name)
             
-        # get the output path.
+        # Write the profile file
         output_path = self.PrfNameToPath(self.comboBoxProfiles.GetValue())
-        
         f = open(output_path, 'w')
         f.write('root = ' + self.textRoot1.GetValue() + '\n')
         f.write('root = ' + self.textRoot2.GetValue() + '\n')
         f.write(self.textOptions.GetValue() + '\n')
         f.close()
         
+        # Write the FULL batch file for this profile
+        f = open(prf_name + " full.bat", 'w')
+        f.write("start /min /wait pre-commands.bat\n")
+        f.write("unison.exe " + prf_name + " -batch=true\n")
+        f.write("if errorlevel 1 pause\n")
+        f.write("exit\n")
+        f.close()
+        
+        # Write the background launcher for FULL
+        f = open(prf_name + " full background.bat",'w')
+        f.write('start /MIN /LOW "'+prf_name+'" "'+prf_name+' full'+'.bat"\n')
+        f.write('exit\n')
+        f.close()
+        
+        # Write the interactive launcher for FULL
+        f = open(prf_name + " full interactive.bat", 'w')
+        f.write('start /min /wait pre-commands.bat\n')
+        f.write('unison.exe ' + prf_name + '\n')
+        f.write('pause\n')
+        f.close()
 
+        # Write the DIRECTORY batch file for this profile
+        f = open(prf_name + " directory.bat", 'w')
+        f.write('set a=%1\n')
+        f.write('set b=%a:' + self.textRoot1.GetValue() + '\\=%\n')
+        f.write('set c=%b:"=%\n') # damn that's some ugly syntax.
+        f.write('start /min /wait pre-commands.bat\n')
+        f.write('unison.exe jackattack -batch=true -path "%c%"\n') 
+        f.write('if errorlevel 1 pause\n')
+        f.write('exit')
+        f.close()
+        # and the shortcut
+        
+        
+        # Write the DIRECTORY interactive batch file
+        f = open(prf_name + " directory interactive.bat", 'w')
+        f.write('set a=%1\n')
+        f.write('set b=%a:' + self.textRoot1.GetValue() + '\\=%\n')
+        f.write('set c=%b:"=%\n') # damn that's some ugly syntax.
+        f.write('start /min /wait pre-commands.bat\n')
+        f.write('unison.exe jackattack -path "%c%"\n') 
+        f.write('if errorlevel 1 pause\n')
+        f.write('exit')
+        f.close()
+        
+        
+        
 
 
     def OnButtonDelete(self, event):
