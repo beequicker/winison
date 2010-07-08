@@ -28,7 +28,7 @@ class frameSetup(wx.Frame):
         wx.Frame.__init__(self, id=wxID_FRAMESETUP, name='frameSetup',
               parent=prnt, pos=wx.Point(67, 35), size=wx.Size(430, 490),
               style=wx.DEFAULT_FRAME_STYLE, title='Unison Setup')
-        self.SetClientSize(wx.Size(422, 456))
+        self.SetClientSize(wx.Size(420, 455))
         self.SetBackgroundColour(wx.Colour(234, 234, 238))
         self.SetToolTipString('')
 
