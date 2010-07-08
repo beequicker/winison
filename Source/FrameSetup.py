@@ -173,8 +173,6 @@ class frameSetup(wx.Frame):
             self.Error("Path "+self.sendto+" does not exist! This is really weird.")
             return False
 
-        self.textRoot1.SetValue(self.sendto)
-
         # search for *.prf files
         prf_paths = glob.glob(os.path.join(self.dot_unison,"*.prf"))
 
@@ -185,7 +183,6 @@ class frameSetup(wx.Frame):
             self.comboBoxProfiles.Append(prf_name)
 
         # select the first one
-
 
 
 
@@ -256,7 +253,7 @@ class frameSetup(wx.Frame):
         f.close()
 
         # Write the FULL batch file for this profile
-        f = open(prf_name + " full.bat", 'w')
+        f = open(os.path.join(os.getcwd(), prf_name + " full.bat"), 'w')
         f.write("start /min /wait pre-commands.bat\n")
         f.write("unison.exe " + prf_name + " -batch=true\n")
         f.write("if errorlevel 1 pause\n")
@@ -287,7 +284,10 @@ class frameSetup(wx.Frame):
         f.write('exit')
         f.close()
         # and the shortcut
-
+        shell = win32com.client.Dispatch("WScript.Shell")
+        shortcut = shell.CreateShortCut(os.path.join(self.sendto, prf_name+' automatic.lnk'))
+        shortcut.Targetpath =           os.path.join(os.getcwd(), prf_name + " directory.bat")
+        shortcut.save()
 
         # Write the DIRECTORY interactive batch file
         f = open(prf_name + " directory interactive.bat", 'w')
@@ -299,6 +299,11 @@ class frameSetup(wx.Frame):
         f.write('if errorlevel 1 pause\n')
         f.write('exit')
         f.close()
+        # and the shortcut
+        shell = win32com.client.Dispatch("WScript.Shell")
+        shortcut = shell.CreateShortCut(os.path.join(self.sendto, prf_name+' interactive.lnk'))
+        shortcut.Targetpath =           os.path.join(os.getcwd(), prf_name + " directory interactive.bat")
+        shortcut.save()
 
 
 
@@ -316,6 +321,16 @@ class frameSetup(wx.Frame):
         # now also remove the actual file
         os.remove(self.PrfNameToPath(prf_name))
 
+        # now remove all the batch files
+        os.remove(prf_name+" full.bat")
+        os.remove(prf_name+" full background.bat")
+        os.remove(prf_name+" full interactive.bat")
+        os.remove(prf_name+" directory.bat")
+        os.remove(prf_name+" directory interactive.bat")
+
+        # and the links
+        os.remove(os.path.join(self.sendto, prf_name+' interactive.lnk'))
+        os.remove(os.path.join(self.sendto, prf_name+' automatic.lnk'))
 
     def OnButtonBrowse1(self, event):
         d = wx.DirDialog(self)
