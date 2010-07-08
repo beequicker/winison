@@ -5,3 +5,5 @@ Insert a "run" button or two that will run whatever profile is selected.
 precommands for everything.
 
 Add "log" and "clear log"
+
+Change frame name to "Winison"
