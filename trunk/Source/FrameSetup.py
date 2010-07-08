@@ -253,7 +253,7 @@ class frameSetup(wx.Frame):
         f.close()
 
         # Write the FULL batch file for this profile
-        f = open(os.path.join(os.getcwd(), prf_name + " full.bat"), 'w')
+        f = open(os.path.join(os.getcwdu(), prf_name + " full.bat"), 'w')
         f.write("start /min /wait pre-commands.bat\n")
         f.write("unison.exe " + prf_name + " -batch=true\n")
         f.write("if errorlevel 1 pause\n")
@@ -286,7 +286,8 @@ class frameSetup(wx.Frame):
         # and the shortcut
         shell = win32com.client.Dispatch("WScript.Shell")
         shortcut = shell.CreateShortCut(os.path.join(self.sendto, prf_name+' automatic.lnk'))
-        shortcut.Targetpath =           os.path.join(os.getcwd(), prf_name + " directory.bat")
+        shortcut.Targetpath =           os.path.join(os.getcwdu(), prf_name + " directory.bat")
+        shortcut.WorkingDirectory =     os.getcwdu()
         shortcut.save()
 
         # Write the DIRECTORY interactive batch file
@@ -302,7 +303,8 @@ class frameSetup(wx.Frame):
         # and the shortcut
         shell = win32com.client.Dispatch("WScript.Shell")
         shortcut = shell.CreateShortCut(os.path.join(self.sendto, prf_name+' interactive.lnk'))
-        shortcut.Targetpath =           os.path.join(os.getcwd(), prf_name + " directory interactive.bat")
+        shortcut.Targetpath =           os.path.join(os.getcwdu(), prf_name + " directory interactive.bat")
+        shortcut.WorkingDirectory =     os.getcwdu()
         shortcut.save()
 
 
