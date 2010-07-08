@@ -1,0 +1,7 @@
+Remove unwanted characters from profile names: space, comma, plus...
+
+Insert a "run" button or two that will run whatever profile is selected.
+
+precommands for everything.
+
+Add "log" and "clear log"
