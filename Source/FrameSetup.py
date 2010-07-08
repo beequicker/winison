@@ -279,7 +279,7 @@ class frameSetup(wx.Frame):
         f.write('set b=%a:' + self.textRoot1.GetValue() + '\\=%\n')
         f.write('set c=%b:"=%\n') # damn that's some ugly syntax.
         f.write('start /min /wait pre-commands.bat\n')
-        f.write('unison.exe' + prf_name + ' -batch=true -path "%c%"\n')
+        f.write('unison.exe ' + prf_name + ' -batch=true -path "%c%"\n')
         f.write('if errorlevel 1 pause\n')
         f.write('exit')
         f.close()
