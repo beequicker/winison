@@ -4,16 +4,17 @@ import wx
 import os
 import glob
 import win32com.client
+import platform
 
 def create(parent):
     return frameSetup(parent)
 
-[wxID_FRAMESETUP, wxID_FRAMESETUPBUTTONBROWSE1, wxID_FRAMESETUPBUTTONBROWSE2, 
- wxID_FRAMESETUPBUTTONDELETE, wxID_FRAMESETUPBUTTONLOAD, 
- wxID_FRAMESETUPBUTTONSAVE, wxID_FRAMESETUPCOMBOBOXPROFILES, 
- wxID_FRAMESETUPSTATICTEXT1, wxID_FRAMESETUPSTATICTEXT2, 
- wxID_FRAMESETUPSTATICTEXT3, wxID_FRAMESETUPTEXTOPTIONS, 
- wxID_FRAMESETUPTEXTROOT1, wxID_FRAMESETUPTEXTROOT2, 
+[wxID_FRAMESETUP, wxID_FRAMESETUPBUTTONBROWSE1, wxID_FRAMESETUPBUTTONBROWSE2,
+ wxID_FRAMESETUPBUTTONDELETE, wxID_FRAMESETUPBUTTONLOAD,
+ wxID_FRAMESETUPBUTTONSAVE, wxID_FRAMESETUPCOMBOBOXPROFILES,
+ wxID_FRAMESETUPSTATICTEXT1, wxID_FRAMESETUPSTATICTEXT2,
+ wxID_FRAMESETUPSTATICTEXT3, wxID_FRAMESETUPTEXTOPTIONS,
+ wxID_FRAMESETUPTEXTROOT1, wxID_FRAMESETUPTEXTROOT2,
 ] = [wx.NewId() for _init_ctrls in range(13)]
 
 class frameSetup(wx.Frame):
@@ -140,7 +141,7 @@ class frameSetup(wx.Frame):
                             ".unison",
                             prf_name+".prf")
 
-    
+
 
     def LoadUp(self):
         """
@@ -162,12 +163,17 @@ class frameSetup(wx.Frame):
         if not os.path.exists(self.dot_unison): os.mkdir(self.dot_unison)
 
         # User/SendTo
-        self.sendto = os.path.join(os.environ["HOMEDRIVE"], os.environ["HOMEPATH"], "SendTo")
+        if platform.release() in ['post2008Server']:
+            # windows 7 or something similar!
+            self.sendto = os.path.join(os.environ['APPDATA'],'Microsoft','Windows','SendTo')
+        else:
+            # assume it's XP
+            self.sendto = os.path.join(os.environ["HOMEDRIVE"], os.environ["HOMEPATH"], "SendTo")
         if not os.path.exists(self.sendto):
             self.Error("Path "+self.sendto+" does not exist! This is really weird.")
             return False
 
-
+        self.textRoot1.SetValue(self.sendto)
 
         # search for *.prf files
         prf_paths = glob.glob(os.path.join(self.dot_unison,"*.prf"))
@@ -233,14 +239,14 @@ class frameSetup(wx.Frame):
         Saves the currently-visible data to the various system files and generates
         the appropriate windows batch files.
         """
-        
+
         # Get whatever garbage the user has typed in there.
         prf_name    = self.comboBoxProfiles.GetValue()
-        
+
         # if it's a new value, append it!
         if not prf_name in self.comboBoxProfiles.GetStrings():
             self.comboBoxProfiles.Append(prf_name)
-            
+
         # Write the profile file
         output_path = self.PrfNameToPath(self.comboBoxProfiles.GetValue())
         f = open(output_path, 'w')
@@ -248,7 +254,7 @@ class frameSetup(wx.Frame):
         f.write('root = ' + self.textRoot2.GetValue() + '\n')
         f.write(self.textOptions.GetValue() + '\n')
         f.close()
-        
+
         # Write the FULL batch file for this profile
         f = open(prf_name + " full.bat", 'w')
         f.write("start /min /wait pre-commands.bat\n")
@@ -256,13 +262,13 @@ class frameSetup(wx.Frame):
         f.write("if errorlevel 1 pause\n")
         f.write("exit\n")
         f.close()
-        
+
         # Write the background launcher for FULL
         f = open(prf_name + " full background.bat",'w')
         f.write('start /MIN /LOW "'+prf_name+'" "'+prf_name+' full'+'.bat"\n')
         f.write('exit\n')
         f.close()
-        
+
         # Write the interactive launcher for FULL
         f = open(prf_name + " full interactive.bat", 'w')
         f.write('start /min /wait pre-commands.bat\n')
@@ -276,52 +282,52 @@ class frameSetup(wx.Frame):
         f.write('set b=%a:' + self.textRoot1.GetValue() + '\\=%\n')
         f.write('set c=%b:"=%\n') # damn that's some ugly syntax.
         f.write('start /min /wait pre-commands.bat\n')
-        f.write('unison.exe jackattack -batch=true -path "%c%"\n') 
+        f.write('unison.exe jackattack -batch=true -path "%c%"\n')
         f.write('if errorlevel 1 pause\n')
         f.write('exit')
         f.close()
         # and the shortcut
-        
-        
+
+
         # Write the DIRECTORY interactive batch file
         f = open(prf_name + " directory interactive.bat", 'w')
         f.write('set a=%1\n')
         f.write('set b=%a:' + self.textRoot1.GetValue() + '\\=%\n')
         f.write('set c=%b:"=%\n') # damn that's some ugly syntax.
         f.write('start /min /wait pre-commands.bat\n')
-        f.write('unison.exe jackattack -path "%c%"\n') 
+        f.write('unison.exe jackattack -path "%c%"\n')
         f.write('if errorlevel 1 pause\n')
         f.write('exit')
         f.close()
-        
-        
-        
+
+
+
 
 
     def OnButtonDelete(self, event):
         # Get whatever garbage the user has typed in there.
         prf_name    = self.comboBoxProfiles.GetValue()
         prf_names   = self.comboBoxProfiles.GetStrings()
-        
+
         if prf_name in prf_names:
             i = prf_names.index(prf_name)
             self.comboBoxProfiles.Delete(i)
-        
+
         # now also remove the actual file
         os.remove(self.PrfNameToPath(prf_name))
-        
+
 
     def OnButtonBrowse1(self, event):
         d = wx.DirDialog(self)
         if d.ShowModal() == 5100:
             self.textRoot1.SetValue(d.GetPath())
-        
+
     def OnButtonBrowse2(self, event):
         d = wx.DirDialog(self)
         if d.ShowModal() == 5100:
             self.textRoot2.SetValue(d.GetPath())
 
-    
+
 
 
 
