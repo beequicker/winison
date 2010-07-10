@@ -13,3 +13,5 @@ Add a popup for deleting.
 Make the directory batch files detect if the Directory is the root directory
 
 Change the name from Root 1 & Root 2 to "Local" and "Remote"
+
+Make the main text area courier so you can have nice spacing.
