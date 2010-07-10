@@ -240,12 +240,17 @@ class frameSetup(wx.Frame):
         # Get whatever garbage the user has typed in there.
         prf_name    = self.comboBoxProfiles.GetValue()
 
+        # remove all the naughty characters
+        naughty = [' ','\t', '\n', '\\', '/', '|', '*', '<', '>', ':', '"']
+        for c in naughty: prf_name = prf_name.replace(c,'')
+
         # if it's a new value, append it!
         if not prf_name in self.comboBoxProfiles.GetStrings():
             self.comboBoxProfiles.Append(prf_name)
+            self.comboBoxProfiles.SetStringSelection(prf_name)
 
         # Write the profile file
-        output_path = self.PrfNameToPath(self.comboBoxProfiles.GetValue())
+        output_path = self.PrfNameToPath(prf_name)
         f = open(output_path, 'w')
         f.write('root = ' + self.textRoot1.GetValue() + '\n')
         f.write('root = ' + self.textRoot2.GetValue() + '\n')
