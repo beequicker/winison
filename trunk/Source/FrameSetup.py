@@ -9,96 +9,136 @@ import platform
 def create(parent):
     return frameSetup(parent)
 
-[wxID_FRAMESETUP, wxID_FRAMESETUPBUTTONBROWSE1, wxID_FRAMESETUPBUTTONBROWSE2,
- wxID_FRAMESETUPBUTTONDELETE, wxID_FRAMESETUPBUTTONLOAD,
- wxID_FRAMESETUPBUTTONSAVE, wxID_FRAMESETUPCOMBOBOXPROFILES,
- wxID_FRAMESETUPSTATICTEXT1, wxID_FRAMESETUPSTATICTEXT2,
- wxID_FRAMESETUPSTATICTEXT3, wxID_FRAMESETUPTEXTOPTIONS,
- wxID_FRAMESETUPTEXTROOT1, wxID_FRAMESETUPTEXTROOT2,
-] = [wx.NewId() for _init_ctrls in range(13)]
+[wxID_FRAMESETUP, wxID_FRAMESETUPBUTTONBROWSE1, wxID_FRAMESETUPBUTTONBROWSE2, 
+ wxID_FRAMESETUPBUTTONDELETE, wxID_FRAMESETUPBUTTONGO, 
+ wxID_FRAMESETUPBUTTONLOAD, wxID_FRAMESETUPBUTTONSAVE, 
+ wxID_FRAMESETUPCHECKBOXINTERACTIVE, wxID_FRAMESETUPCHECKBOXQUIT, 
+ wxID_FRAMESETUPCOMBOBOXPROFILES, wxID_FRAMESETUPSTATICTEXT1, 
+ wxID_FRAMESETUPSTATICTEXT2, wxID_FRAMESETUPSTATICTEXT3, 
+ wxID_FRAMESETUPTEXTOPTIONS, wxID_FRAMESETUPTEXTROOT1, 
+ wxID_FRAMESETUPTEXTROOT2, 
+] = [wx.NewId() for _init_ctrls in range(16)]
 
 class frameSetup(wx.Frame):
 
     # paths assembled in LoadUp
-    dot_unison = None
-    sendto     = None
-
+    dot_unison     = None
+    sendto         = None
+    parent         = None
+    
     def _init_ctrls(self, prnt):
         # generated method, don't edit
         wx.Frame.__init__(self, id=wxID_FRAMESETUP, name='frameSetup',
-              parent=prnt, pos=wx.Point(67, 35), size=wx.Size(430, 490),
+              parent=prnt, pos=wx.Point(314, 128), size=wx.Size(428, 465),
               style=wx.DEFAULT_FRAME_STYLE, title='Unison Setup')
-        self.SetClientSize(wx.Size(420, 455))
+        self.SetClientSize(wx.Size(420, 431))
         self.SetBackgroundColour(wx.Colour(234, 234, 238))
         self.SetToolTipString('')
+        self.Bind(wx.EVT_CLOSE, self.OnFrameSetupClose)
 
         self.buttonSave = wx.Button(id=wxID_FRAMESETUPBUTTONSAVE, label='Save',
-              name='buttonSave', parent=self, pos=wx.Point(315, 7),
+              name='buttonSave', parent=self, pos=wx.Point(91, 31),
               size=wx.Size(48, 23), style=0)
+        self.buttonSave.SetToolTipString('Save the data from below into the selected profile (or type a new name).')
         self.buttonSave.Bind(wx.EVT_BUTTON, self.OnButtonSave,
               id=wxID_FRAMESETUPBUTTONSAVE)
 
         self.buttonDelete = wx.Button(id=wxID_FRAMESETUPBUTTONDELETE,
               label='Delete', name='buttonDelete', parent=self,
-              pos=wx.Point(365, 7), size=wx.Size(48, 23), style=0)
+              pos=wx.Point(141, 31), size=wx.Size(48, 23), style=0)
+        self.buttonDelete.SetToolTipString('Delete selected profile.')
         self.buttonDelete.Bind(wx.EVT_BUTTON, self.OnButtonDelete,
               id=wxID_FRAMESETUPBUTTONDELETE)
 
         self.staticText1 = wx.StaticText(id=wxID_FRAMESETUPSTATICTEXT1,
-              label='Root 1', name='staticText1', parent=self, pos=wx.Point(8,
-              59), size=wx.Size(32, 13), style=0)
+              label='Local Root', name='staticText1', parent=self,
+              pos=wx.Point(8, 71), size=wx.Size(50, 13), style=0)
+        self.staticText1.SetToolTipString('')
 
         self.staticText2 = wx.StaticText(id=wxID_FRAMESETUPSTATICTEXT2,
-              label='Root 2', name='staticText2', parent=self, pos=wx.Point(8,
-              83), size=wx.Size(32, 13), style=0)
+              label='Remote Root', name='staticText2', parent=self,
+              pos=wx.Point(8, 94), size=wx.Size(63, 13), style=0)
+        self.staticText2.SetToolTipString('')
 
         self.textRoot1 = wx.TextCtrl(id=wxID_FRAMESETUPTEXTROOT1,
-              name='textRoot1', parent=self, pos=wx.Point(48, 56),
-              size=wx.Size(304, 21), style=0, value='')
+              name='textRoot1', parent=self, pos=wx.Point(80, 67),
+              size=wx.Size(272, 21), style=0, value='')
+        self.textRoot1.SetToolTipString('Path to the "local" root.')
 
         self.textRoot2 = wx.TextCtrl(id=wxID_FRAMESETUPTEXTROOT2,
-              name='textRoot2', parent=self, pos=wx.Point(48, 80),
-              size=wx.Size(304, 21), style=0, value='')
+              name='textRoot2', parent=self, pos=wx.Point(80, 91),
+              size=wx.Size(272, 21), style=0, value='')
+        self.textRoot2.SetToolTipString('Path to the "remote" root.')
 
         self.buttonBrowse1 = wx.Button(id=wxID_FRAMESETUPBUTTONBROWSE1,
               label='Browse', name='buttonBrowse1', parent=self,
-              pos=wx.Point(355, 55), size=wx.Size(58, 23), style=0)
+              pos=wx.Point(355, 66), size=wx.Size(58, 23), style=0)
         self.buttonBrowse1.SetToolTipString('')
         self.buttonBrowse1.Bind(wx.EVT_BUTTON, self.OnButtonBrowse1,
               id=wxID_FRAMESETUPBUTTONBROWSE1)
 
         self.buttonBrowse2 = wx.Button(id=wxID_FRAMESETUPBUTTONBROWSE2,
               label='Browse', name='buttonBrowse2', parent=self,
-              pos=wx.Point(355, 79), size=wx.Size(58, 23), style=0)
+              pos=wx.Point(355, 90), size=wx.Size(58, 23), style=0)
         self.buttonBrowse2.Bind(wx.EVT_BUTTON, self.OnButtonBrowse2,
               id=wxID_FRAMESETUPBUTTONBROWSE2)
 
         self.textOptions = wx.TextCtrl(id=wxID_FRAMESETUPTEXTOPTIONS,
-              name='textOptions', parent=self, pos=wx.Point(8, 104),
-              size=wx.Size(404, 344), style=wx.TE_MULTILINE | wx.HSCROLL,
+              name='textOptions', parent=self, pos=wx.Point(8, 115),
+              size=wx.Size(404, 309), style=wx.TE_MULTILINE | wx.HSCROLL,
               value='')
+        self.textOptions.SetFont(wx.Font(10, wx.SWISS, wx.NORMAL, wx.NORMAL,
+              False, 'Courier New'))
+        self.textOptions.SetToolTipString('Additional Unison options.')
 
         self.comboBoxProfiles = wx.ComboBox(choices=[],
               id=wxID_FRAMESETUPCOMBOBOXPROFILES, name='comboBoxProfiles',
-              parent=self, pos=wx.Point(48, 8), size=wx.Size(215, 21), style=0,
+              parent=self, pos=wx.Point(42, 8), size=wx.Size(146, 21), style=0,
               value='')
         self.comboBoxProfiles.SetLabel('')
+        self.comboBoxProfiles.SetToolTipString('Select a profile')
 
         self.staticText3 = wx.StaticText(id=wxID_FRAMESETUPSTATICTEXT3,
               label='Profile', name='staticText3', parent=self, pos=wx.Point(8,
               13), size=wx.Size(30, 13), style=0)
         self.staticText3.SetFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.NORMAL,
               False, 'Tahoma'))
+        self.staticText3.SetToolTipString('')
 
         self.buttonLoad = wx.Button(id=wxID_FRAMESETUPBUTTONLOAD, label='Load',
-              name='buttonLoad', parent=self, pos=wx.Point(265, 7),
+              name='buttonLoad', parent=self, pos=wx.Point(41, 31),
               size=wx.Size(48, 23), style=0)
+        self.buttonLoad.SetToolTipString('Load the selected profile into the lower fields.')
         self.buttonLoad.Bind(wx.EVT_BUTTON, self.OnButtonLoad,
               id=wxID_FRAMESETUPBUTTONLOAD)
 
+        self.buttonGo = wx.Button(id=wxID_FRAMESETUPBUTTONGO, label='Go',
+              name='buttonGo', parent=self, pos=wx.Point(191, 8),
+              size=wx.Size(64, 46), style=0)
+        self.buttonGo.SetToolTipString('Execute selected profile as a background process.')
+        self.buttonGo.SetFont(wx.Font(24, wx.SWISS, wx.NORMAL, wx.BOLD, False,
+              'Courier New'))
+        self.buttonGo.SetBackgroundColour(wx.Colour(1, 150, 117))
+        self.buttonGo.SetForegroundColour(wx.Colour(255, 255, 255))
+        self.buttonGo.Bind(wx.EVT_BUTTON, self.OnButtonGo,
+              id=wxID_FRAMESETUPBUTTONGO)
+
+        self.checkBoxInteractive = wx.CheckBox(id=wxID_FRAMESETUPCHECKBOXINTERACTIVE,
+              label='Interactive', name='checkBoxInteractive', parent=self,
+              pos=wx.Point(257, 9), size=wx.Size(70, 13), style=0)
+        self.checkBoxInteractive.SetValue(True)
+        self.checkBoxInteractive.SetToolTipString('Check this if you want an interactive Unison sync (as opposed to automatic)')
+
+        self.checkBoxQuit = wx.CheckBox(id=wxID_FRAMESETUPCHECKBOXQUIT,
+              label='Quit after launching', name='checkBoxQuit', parent=self,
+              pos=wx.Point(257, 25), size=wx.Size(129, 13), style=0)
+        self.checkBoxQuit.SetValue(True)
+        self.checkBoxQuit.SetToolTipString('Check this if you want to shut down Winison when you press "Go"')
+
     def __init__(self, parent):
         self._init_ctrls(parent)
-
+        self.parent = parent
+        
         # scan the system for the various profiles
         if self.LoadUp() == False: return
 
@@ -123,6 +163,7 @@ class frameSetup(wx.Frame):
         Clears all the GUI stuff out and displays an error in the
         preferences box.
         """
+        print s
         self.ClearGUI()
         self.textOptions.SetValue(s)
 
@@ -168,7 +209,8 @@ class frameSetup(wx.Frame):
             self.sendto = os.path.join(os.environ['APPDATA'],'Microsoft','Windows','SendTo')
         else:
             # assume it's XP
-            self.sendto = os.path.join(os.environ["HOMEDRIVE"], os.environ["HOMEPATH"], "SendTo")
+            self.sendto         = os.path.join(os.environ["HOMEDRIVE"], os.environ["HOMEPATH"], "SendTo")
+            
         if not os.path.exists(self.sendto):
             self.Error("Path "+self.sendto+" does not exist! This is really weird.")
             return False
@@ -182,11 +224,23 @@ class frameSetup(wx.Frame):
             prf_name = self.PrfPathToName(p)
             self.comboBoxProfiles.Append(prf_name)
 
-        # select the first one
+        
+        
+        # now load the preferences file.
+        if os.path.exists("winison.cfg"):
+            f = open("winison.cfg","r")
+            lines = f.readlines()
+            f.close()
+            for line in lines:
+                s = line.split("\t")
+                if len(s)==2:
+                    key = s[0].strip()
+                    value = s[1].strip()
+                    try:    exec("self."+key+"("+value+")")
+                    except: print "Could not '"+"self."+key+"("+value+")'."
 
 
-
-
+    
 ##################################
 ## EVENTS
 ##################################
@@ -348,6 +402,29 @@ class frameSetup(wx.Frame):
         d = wx.DirDialog(self)
         if d.ShowModal() == 5100:
             self.textRoot2.SetValue(d.GetPath())
+
+    def OnFrameSetupClose(self, event):
+        
+        # define the controls we want to save
+        values = ["checkBoxQuit.GetValue", 
+                  "checkBoxInteractive.GetValue"]
+                 
+        strings = ["comboBoxProfiles.GetStringSelection"]
+        
+        # save the preferences
+        f = open("winison.cfg", "w")
+        for savie in values:
+            f.write(savie.replace(".Get",".Set") + 
+                    "\t"+str(eval("self."+savie+"()"))+"\n")
+        for savie in strings:
+            f.write(savie.replace(".Get",".Set") +
+                    "\t'"+str(eval("self."+savie+"()"))+"'\n")
+        f.close()
+        
+        wx.Exit()
+
+    def OnButtonGo(self, event):
+        event.Skip()
 
 
 
