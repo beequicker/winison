@@ -1,2 +1,2 @@
-c:\python26\python.exe winison.py
+c:\python25\python.exe winison.py
 pause
