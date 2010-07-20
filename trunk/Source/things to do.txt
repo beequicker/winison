@@ -1,5 +1,3 @@
 Add "log" and "clear log"
 
-Add a progress bar for saving.
-
 Make the directory batch files detect if the Directory is the root directory

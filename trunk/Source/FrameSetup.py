@@ -5,6 +5,7 @@ import os
 import glob
 import win32com.client
 import platform
+import shutil
 
 def create(parent):
     return frameSetup(parent)
@@ -13,11 +14,11 @@ def create(parent):
  wxID_FRAMESETUPBUTTONDELETE, wxID_FRAMESETUPBUTTONGO,
  wxID_FRAMESETUPBUTTONLOAD, wxID_FRAMESETUPBUTTONSAVE,
  wxID_FRAMESETUPCHECKBOXINTERACTIVE, wxID_FRAMESETUPCHECKBOXQUIT,
- wxID_FRAMESETUPCOMBOBOXPROFILES, wxID_FRAMESETUPSTATICTEXT1,
- wxID_FRAMESETUPSTATICTEXT2, wxID_FRAMESETUPSTATICTEXT3,
- wxID_FRAMESETUPTEXTOPTIONS, wxID_FRAMESETUPTEXTROOT1,
- wxID_FRAMESETUPTEXTROOT2,
-] = [wx.NewId() for _init_ctrls in range(16)]
+ wxID_FRAMESETUPCOMBOBOXPROFILES, wxID_FRAMESETUPGAUGESAVED,
+ wxID_FRAMESETUPSTATICTEXT1, wxID_FRAMESETUPSTATICTEXT2,
+ wxID_FRAMESETUPSTATICTEXT3, wxID_FRAMESETUPTEXTOPTIONS,
+ wxID_FRAMESETUPTEXTROOT1, wxID_FRAMESETUPTEXTROOT2,
+] = [wx.NewId() for _init_ctrls in range(17)]
 
 class frameSetup(wx.Frame):
 
@@ -29,7 +30,7 @@ class frameSetup(wx.Frame):
     def _init_ctrls(self, prnt):
         # generated method, don't edit
         wx.Frame.__init__(self, id=wxID_FRAMESETUP, name='frameSetup',
-              parent=prnt, pos=wx.Point(314, 128), size=wx.Size(428, 465),
+              parent=prnt, pos=wx.Point(294, 131), size=wx.Size(428, 465),
               style=wx.DEFAULT_FRAME_STYLE, title='Winison')
         self.SetClientSize(wx.Size(420, 431))
         self.SetBackgroundColour(wx.Colour(234, 234, 238))
@@ -64,11 +65,15 @@ class frameSetup(wx.Frame):
               name='textRoot1', parent=self, pos=wx.Point(80, 67),
               size=wx.Size(272, 21), style=0, value='')
         self.textRoot1.SetToolTipString('Path to the "local" root.')
+        self.textRoot1.Bind(wx.EVT_TEXT, self.OnParameterChange,
+              id=wxID_FRAMESETUPTEXTROOT1)
 
         self.textRoot2 = wx.TextCtrl(id=wxID_FRAMESETUPTEXTROOT2,
               name='textRoot2', parent=self, pos=wx.Point(80, 91),
               size=wx.Size(272, 21), style=0, value='')
         self.textRoot2.SetToolTipString('Path to the "remote" root.')
+        self.textRoot2.Bind(wx.EVT_TEXT, self.OnParameterChange,
+              id=wxID_FRAMESETUPTEXTROOT2)
 
         self.buttonBrowse1 = wx.Button(id=wxID_FRAMESETUPBUTTONBROWSE1,
               label='Browse', name='buttonBrowse1', parent=self,
@@ -90,6 +95,8 @@ class frameSetup(wx.Frame):
         self.textOptions.SetFont(wx.Font(9, wx.SWISS, wx.NORMAL, wx.NORMAL,
               False, 'Courier New'))
         self.textOptions.SetToolTipString('Additional Unison options.')
+        self.textOptions.Bind(wx.EVT_TEXT, self.OnParameterChange,
+              id=wxID_FRAMESETUPTEXTOPTIONS)
 
         self.comboBoxProfiles = wx.ComboBox(choices=[],
               id=wxID_FRAMESETUPCOMBOBOXPROFILES, name='comboBoxProfiles',
@@ -97,6 +104,8 @@ class frameSetup(wx.Frame):
               value='')
         self.comboBoxProfiles.SetLabel('')
         self.comboBoxProfiles.SetToolTipString('Select a profile')
+        self.comboBoxProfiles.Bind(wx.EVT_COMBOBOX, self.OnComboBoxProfiles,
+              id=wxID_FRAMESETUPCOMBOBOXPROFILES)
 
         self.staticText3 = wx.StaticText(id=wxID_FRAMESETUPSTATICTEXT3,
               label='Profile', name='staticText3', parent=self, pos=wx.Point(8,
@@ -134,6 +143,11 @@ class frameSetup(wx.Frame):
               pos=wx.Point(257, 25), size=wx.Size(129, 13), style=0)
         self.checkBoxQuit.SetValue(True)
         self.checkBoxQuit.SetToolTipString('Check this if you want to shut down Winison when you press "Go"')
+
+        self.gaugeSaved = wx.Gauge(id=wxID_FRAMESETUPGAUGESAVED,
+              name='gaugeSaved', parent=self, pos=wx.Point(257, 41), range=7,
+              size=wx.Size(155, 12), style=wx.GA_HORIZONTAL)
+        self.gaugeSaved.SetToolTipString('This gauge shows whether the profile parameters shown below are saved to the selected profile.')
 
     def __init__(self, parent):
         self._init_ctrls(parent)
@@ -223,7 +237,7 @@ class frameSetup(wx.Frame):
         else:
             # assume it's XP
             self.sendto = os.path.join(os.environ["HOMEDRIVE"], os.environ["HOMEPATH"], "SendTo")
-            start_menu  = os.path.join(os.environ["HOMEDRIVE"], os.environ["HOMEPATH"], "Start Menu")
+            start_menu  = os.path.join(os.environ["HOMEDRIVE"], os.environ["HOMEPATH"], "Start Menu", "Programs")
 
         if not os.path.exists(self.sendto):
             self.Error("Path "+self.sendto+" does not exist! This is really weird.")
@@ -253,11 +267,17 @@ class frameSetup(wx.Frame):
                     try:    exec("self."+key+".SetValue("+value+")")
                     except: print "Could not '"+"self."+key+".SetValue("+value+")'."
 
+            # load whatever profile is selected
+            self.OnButtonLoad(None)
+
         # if the prefs file doesn't exist, this is the first run.
-        elif wx.MessageBox("This appears to be the first time you've run Winison. Would you like a link to be added to the start menu?", "Add Winison to start menu?", wx.YES|wx.NO) == wx.YES:
+        else:
+            if wx.MessageBox("This appears to be the first time you've run Winison. Would you like a link to be added to the start menu?", "Add Winison to start menu?", wx.YES|wx.NO) == wx.YES:
                 self.CreateShortcut(os.path.join(os.getcwdu(), "winison.exe"), os.getcwdu(), os.path.join(start_menu, "Winison.lnk"))
 
-
+        # Look for a unison.exe.
+        if not os.path.exists("unison.exe"):
+            shutil.copy("my_version_of_unison", "unison.exe")
 
 
 
@@ -304,11 +324,17 @@ class frameSetup(wx.Frame):
             else:
                 self.textOptions.AppendText(line)
 
+        # Save it. This makes sure what you see is correctly synced.
+        self.OnButtonSave(None)
+
     def OnButtonSave(self, event):
         """
         Saves the currently-visible data to the various system files and generates
         the appropriate windows batch files.
         """
+
+        # reset the gauge
+        self.gaugeSaved.SetValue(0)
 
         # Get whatever garbage the user has typed in there.
         prf_name    = self.comboBoxProfiles.GetValue()
@@ -330,6 +356,8 @@ class frameSetup(wx.Frame):
         f.write(self.textOptions.GetValue() + '\n')
         f.close()
 
+        self.gaugeSaved.SetValue(1)
+
         # Write the FULL batch file for this profile
         f = open(os.path.join(os.getcwdu(), prf_name + " full.bat"), 'w')
         f.write('start /min /wait "pre-commands" "'+prf_name+' pre-commands.bat"\n')
@@ -338,11 +366,15 @@ class frameSetup(wx.Frame):
         f.write("exit\n")
         f.close()
 
+        self.gaugeSaved.SetValue(2)
+
         # Write the background launcher for FULL
         f = open(prf_name + " full background.bat",'w')
         f.write('start /MIN /LOW "'+prf_name+'" "'+prf_name+' full'+'.bat"\n')
         f.write('exit\n')
         f.close()
+
+        self.gaugeSaved.SetValue(3)
 
         # Write the interactive launcher for FULL
         f = open(prf_name + " full interactive.bat", 'w')
@@ -350,6 +382,8 @@ class frameSetup(wx.Frame):
         f.write('unison.exe ' + prf_name + '\n')
         f.write('pause\n')
         f.close()
+
+        self.gaugeSaved.SetValue(4)
 
         # Write the DIRECTORY batch file for this profile
         f = open(prf_name + " directory.bat", 'w')
@@ -366,6 +400,8 @@ class frameSetup(wx.Frame):
                             os.getcwdu(),
                             os.path.join(self.sendto, prf_name+' automatic.lnk'))
 
+        self.gaugeSaved.SetValue(5)
+
         # Write the DIRECTORY interactive batch file
         f = open(prf_name + " directory interactive.bat", 'w')
         f.write('set a=%1\n')
@@ -381,11 +417,15 @@ class frameSetup(wx.Frame):
                             os.getcwdu(),
                             os.path.join(self.sendto, prf_name+' interactive.lnk'))
 
+        self.gaugeSaved.SetValue(6)
+
         # also the pre-commands.bat file
         if not os.path.exists(prf_name + " pre-commands.bat"):
             f = open(prf_name + " pre-commands.bat", "w")
             f.write("\n\n\nexit\n")
             f.close()
+
+        self.gaugeSaved.SetValue(7)
 
 
     def OnButtonDelete(self, event):
@@ -458,6 +498,13 @@ class frameSetup(wx.Frame):
         # yeah. Quit if we're supposed to.
         if self.checkBoxQuit.GetValue(): self.OnFrameSetupClose(None)
 
+    def OnComboBoxProfiles(self, event):
+
+        # auto load when we select something
+        self.OnButtonLoad(None)
+
+    def OnParameterChange(self, event):
+        self.gaugeSaved.SetValue(0)
 
 
 
