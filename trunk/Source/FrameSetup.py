@@ -233,7 +233,7 @@ class frameSetup(wx.Frame):
         if platform.release() in ['post2008Server']:
             # windows 7 or something similar!
             self.sendto = os.path.join(os.environ['APPDATA'],'Microsoft','Windows','SendTo')
-            start_menu  = os.path.join(os.environ['APPDATA'],'Microsoft','Windows','Start Menu')
+            start_menu  = os.path.join(os.environ['APPDATA'],'Microsoft','Windows','Start Menu', 'Programs')
         else:
             # assume it's XP
             self.sendto = os.path.join(os.environ["HOMEDRIVE"], os.environ["HOMEPATH"], "SendTo")
