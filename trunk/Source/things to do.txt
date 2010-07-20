@@ -1,5 +1,3 @@
-precommands for everything.
-
 Add "log" and "clear log"
 
 Add a progress bar for saving.
