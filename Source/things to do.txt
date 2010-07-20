@@ -1,17 +1,7 @@
-Insert a "run" button or two that will run whatever profile is selected.
-
 precommands for everything.
 
 Add "log" and "clear log"
 
-Change frame name to "Winison"
-
 Add a progress bar for saving.
 
-Add a popup for deleting.
-
 Make the directory batch files detect if the Directory is the root directory
-
-Change the name from Root 1 & Root 2 to "Local" and "Remote"
-
-Make the main text area courier so you can have nice spacing.

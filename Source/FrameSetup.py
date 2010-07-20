@@ -9,14 +9,14 @@ import platform
 def create(parent):
     return frameSetup(parent)
 
-[wxID_FRAMESETUP, wxID_FRAMESETUPBUTTONBROWSE1, wxID_FRAMESETUPBUTTONBROWSE2, 
- wxID_FRAMESETUPBUTTONDELETE, wxID_FRAMESETUPBUTTONGO, 
- wxID_FRAMESETUPBUTTONLOAD, wxID_FRAMESETUPBUTTONSAVE, 
- wxID_FRAMESETUPCHECKBOXINTERACTIVE, wxID_FRAMESETUPCHECKBOXQUIT, 
- wxID_FRAMESETUPCOMBOBOXPROFILES, wxID_FRAMESETUPSTATICTEXT1, 
- wxID_FRAMESETUPSTATICTEXT2, wxID_FRAMESETUPSTATICTEXT3, 
- wxID_FRAMESETUPTEXTOPTIONS, wxID_FRAMESETUPTEXTROOT1, 
- wxID_FRAMESETUPTEXTROOT2, 
+[wxID_FRAMESETUP, wxID_FRAMESETUPBUTTONBROWSE1, wxID_FRAMESETUPBUTTONBROWSE2,
+ wxID_FRAMESETUPBUTTONDELETE, wxID_FRAMESETUPBUTTONGO,
+ wxID_FRAMESETUPBUTTONLOAD, wxID_FRAMESETUPBUTTONSAVE,
+ wxID_FRAMESETUPCHECKBOXINTERACTIVE, wxID_FRAMESETUPCHECKBOXQUIT,
+ wxID_FRAMESETUPCOMBOBOXPROFILES, wxID_FRAMESETUPSTATICTEXT1,
+ wxID_FRAMESETUPSTATICTEXT2, wxID_FRAMESETUPSTATICTEXT3,
+ wxID_FRAMESETUPTEXTOPTIONS, wxID_FRAMESETUPTEXTROOT1,
+ wxID_FRAMESETUPTEXTROOT2,
 ] = [wx.NewId() for _init_ctrls in range(16)]
 
 class frameSetup(wx.Frame):
@@ -25,12 +25,12 @@ class frameSetup(wx.Frame):
     dot_unison     = None
     sendto         = None
     parent         = None
-    
+
     def _init_ctrls(self, prnt):
         # generated method, don't edit
         wx.Frame.__init__(self, id=wxID_FRAMESETUP, name='frameSetup',
               parent=prnt, pos=wx.Point(314, 128), size=wx.Size(428, 465),
-              style=wx.DEFAULT_FRAME_STYLE, title='Unison Setup')
+              style=wx.DEFAULT_FRAME_STYLE, title='Winison')
         self.SetClientSize(wx.Size(420, 431))
         self.SetBackgroundColour(wx.Colour(234, 234, 238))
         self.SetToolTipString('')
@@ -87,7 +87,7 @@ class frameSetup(wx.Frame):
               name='textOptions', parent=self, pos=wx.Point(8, 115),
               size=wx.Size(404, 309), style=wx.TE_MULTILINE | wx.HSCROLL,
               value='')
-        self.textOptions.SetFont(wx.Font(10, wx.SWISS, wx.NORMAL, wx.NORMAL,
+        self.textOptions.SetFont(wx.Font(9, wx.SWISS, wx.NORMAL, wx.NORMAL,
               False, 'Courier New'))
         self.textOptions.SetToolTipString('Additional Unison options.')
 
@@ -138,13 +138,9 @@ class frameSetup(wx.Frame):
     def __init__(self, parent):
         self._init_ctrls(parent)
         self.parent = parent
-        
+
         # scan the system for the various profiles
         if self.LoadUp() == False: return
-
-
-
-
 
 
 
@@ -182,6 +178,22 @@ class frameSetup(wx.Frame):
                             ".unison",
                             prf_name+".prf")
 
+    def CreateShortcut(self, target, startin, path):
+        """
+        Creates a link to the specified target with startin directory. Saves
+        the link to path
+        """
+        shell = win32com.client.Dispatch("WScript.Shell")
+        shortcut = shell.CreateShortCut(path)
+        shortcut.Targetpath =       target
+        shortcut.WorkingDirectory = startin
+        shortcut.save()
+
+    def RemoveFile(self, path):
+        """
+        Tries to safely remove the file.
+        """
+        if os.path.exists(path): os.remove(path)
 
 
     def LoadUp(self):
@@ -207,10 +219,12 @@ class frameSetup(wx.Frame):
         if platform.release() in ['post2008Server']:
             # windows 7 or something similar!
             self.sendto = os.path.join(os.environ['APPDATA'],'Microsoft','Windows','SendTo')
+            start_menu  = os.path.join(os.environ['APPDATA'],'Microsoft','Windows','Start Menu')
         else:
             # assume it's XP
-            self.sendto         = os.path.join(os.environ["HOMEDRIVE"], os.environ["HOMEPATH"], "SendTo")
-            
+            self.sendto = os.path.join(os.environ["HOMEDRIVE"], os.environ["HOMEPATH"], "SendTo")
+            start_menu  = os.path.join(os.environ["HOMEDRIVE"], os.environ["HOMEPATH"], "Start Menu")
+
         if not os.path.exists(self.sendto):
             self.Error("Path "+self.sendto+" does not exist! This is really weird.")
             return False
@@ -224,8 +238,8 @@ class frameSetup(wx.Frame):
             prf_name = self.PrfPathToName(p)
             self.comboBoxProfiles.Append(prf_name)
 
-        
-        
+
+
         # now load the preferences file.
         if os.path.exists("winison.cfg"):
             f = open("winison.cfg","r")
@@ -236,11 +250,17 @@ class frameSetup(wx.Frame):
                 if len(s)==2:
                     key = s[0].strip()
                     value = s[1].strip()
-                    try:    exec("self."+key+"("+value+")")
-                    except: print "Could not '"+"self."+key+"("+value+")'."
+                    try:    exec("self."+key+".SetValue("+value+")")
+                    except: print "Could not '"+"self."+key+".SetValue("+value+")'."
+
+        # if the prefs file doesn't exist, this is the first run.
+        elif wx.MessageBox("This appears to be the first time you've run Winison. Would you like a link to be added to the start menu?", "Add Winison to start menu?", wx.YES|wx.NO) == wx.YES:
+                self.CreateShortcut(os.path.join(os.getcwdu(), "winison.exe"), os.getcwdu(), os.path.join(start_menu, "Winison.lnk"))
 
 
-    
+
+
+
 ##################################
 ## EVENTS
 ##################################
@@ -283,7 +303,6 @@ class frameSetup(wx.Frame):
                     self.textOptions.AppendText(line)
             else:
                 self.textOptions.AppendText(line)
-
 
     def OnButtonSave(self, event):
         """
@@ -343,11 +362,9 @@ class frameSetup(wx.Frame):
         f.write('exit')
         f.close()
         # and the shortcut
-        shell = win32com.client.Dispatch("WScript.Shell")
-        shortcut = shell.CreateShortCut(os.path.join(self.sendto, prf_name+' automatic.lnk'))
-        shortcut.Targetpath =           os.path.join(os.getcwdu(), prf_name + " directory.bat")
-        shortcut.WorkingDirectory =     os.getcwdu()
-        shortcut.save()
+        self.CreateShortcut(os.path.join(os.getcwdu(), prf_name + " directory.bat"),
+                            os.getcwdu(),
+                            os.path.join(self.sendto, prf_name+' automatic.lnk'))
 
         # Write the DIRECTORY interactive batch file
         f = open(prf_name + " directory interactive.bat", 'w')
@@ -360,38 +377,42 @@ class frameSetup(wx.Frame):
         f.write('exit')
         f.close()
         # and the shortcut
-        shell = win32com.client.Dispatch("WScript.Shell")
-        shortcut = shell.CreateShortCut(os.path.join(self.sendto, prf_name+' interactive.lnk'))
-        shortcut.Targetpath =           os.path.join(os.getcwdu(), prf_name + " directory interactive.bat")
-        shortcut.WorkingDirectory =     os.getcwdu()
-        shortcut.save()
-
-
+        self.CreateShortcut(os.path.join(os.getcwdu(), prf_name + " directory interactive.bat"),
+                            os.getcwdu(),
+                            os.path.join(self.sendto, prf_name+' interactive.lnk'))
 
 
 
     def OnButtonDelete(self, event):
+
         # Get whatever garbage the user has typed in there.
         prf_name    = self.comboBoxProfiles.GetValue()
         prf_names   = self.comboBoxProfiles.GetStrings()
 
         if prf_name in prf_names:
+            # make sure they want to go forward with this.
+            if wx.MessageBox("Are you sure you would like to delete everything to do with the unison profile '"+prf_name+"'? This action cannot be undone.",
+                             "Confirm Delete: '"+prf_name+"'", wx.YES_NO) == wx.NO: return
+
             i = prf_names.index(prf_name)
             self.comboBoxProfiles.Delete(i)
+            self.comboBoxProfiles.Select(0)
+        else: return
 
         # now also remove the actual file
-        os.remove(self.PrfNameToPath(prf_name))
+        self.RemoveFile(self.PrfNameToPath(prf_name))
 
         # now remove all the batch files
-        os.remove(prf_name+" full.bat")
-        os.remove(prf_name+" full background.bat")
-        os.remove(prf_name+" full interactive.bat")
-        os.remove(prf_name+" directory.bat")
-        os.remove(prf_name+" directory interactive.bat")
+        self.RemoveFile(prf_name+" full.bat")
+        self.RemoveFile(prf_name+" full background.bat")
+        self.RemoveFile(prf_name+" full interactive.bat")
+        self.RemoveFile(prf_name+" directory.bat")
+        self.RemoveFile(prf_name+" directory interactive.bat")
 
         # and the links
-        os.remove(os.path.join(self.sendto, prf_name+' interactive.lnk'))
-        os.remove(os.path.join(self.sendto, prf_name+' automatic.lnk'))
+        self.RemoveFile(os.path.join(self.sendto, prf_name+' interactive.lnk'))
+        self.RemoveFile(os.path.join(self.sendto, prf_name+' automatic.lnk'))
+
 
     def OnButtonBrowse1(self, event):
         d = wx.DirDialog(self)
@@ -403,28 +424,33 @@ class frameSetup(wx.Frame):
         if d.ShowModal() == 5100:
             self.textRoot2.SetValue(d.GetPath())
 
-    def OnFrameSetupClose(self, event):
-        
+    def OnFrameSetupClose(self, event=None):
+
         # define the controls we want to save
-        values = ["checkBoxQuit.GetValue", 
-                  "checkBoxInteractive.GetValue"]
-                 
-        strings = ["comboBoxProfiles.GetStringSelection"]
-        
+        savies = ["checkBoxQuit", "checkBoxInteractive", "comboBoxProfiles"]
+
         # save the preferences
         f = open("winison.cfg", "w")
-        for savie in values:
-            f.write(savie.replace(".Get",".Set") + 
-                    "\t"+str(eval("self."+savie+"()"))+"\n")
-        for savie in strings:
-            f.write(savie.replace(".Get",".Set") +
-                    "\t'"+str(eval("self."+savie+"()"))+"'\n")
+        for savie in savies:
+            value = eval("self."+savie+".GetValue()")
+            if type(value) in [type(''), type(u'')]: value = "'"+value+"'"
+            f.write(savie + "\t" + str(value) + "\n")
         f.close()
-        
+
         wx.Exit()
 
     def OnButtonGo(self, event):
-        event.Skip()
+
+        # get the profile name
+        prf_name = self.comboBoxProfiles.GetValue()
+        if prf_name=='': return
+
+        # Depending on the check boxes, launch the appropriate sync file
+        if self.checkBoxInteractive.GetValue(): wx.Execute(prf_name+" full interactive.bat")
+        else:                                   wx.Execute(prf_name+" full background.bat")
+
+        # yeah. Quit if we're supposed to.
+        if self.checkBoxQuit.GetValue(): self.OnFrameSetupClose(None)
 
 
 
