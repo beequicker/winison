@@ -332,7 +332,7 @@ class frameSetup(wx.Frame):
 
         # Write the FULL batch file for this profile
         f = open(os.path.join(os.getcwdu(), prf_name + " full.bat"), 'w')
-        f.write("start /min /wait pre-commands.bat\n")
+        f.write('start /min /wait "pre-commands" "'+prf_name+' pre-commands.bat"\n')
         f.write("unison.exe " + prf_name + " -batch=true\n")
         f.write("if errorlevel 1 pause\n")
         f.write("exit\n")
@@ -346,7 +346,7 @@ class frameSetup(wx.Frame):
 
         # Write the interactive launcher for FULL
         f = open(prf_name + " full interactive.bat", 'w')
-        f.write('start /min /wait pre-commands.bat\n')
+        f.write('start /min /wait "pre-commands" "'+prf_name+' pre-commands.bat"\n')
         f.write('unison.exe ' + prf_name + '\n')
         f.write('pause\n')
         f.close()
@@ -356,7 +356,7 @@ class frameSetup(wx.Frame):
         f.write('set a=%1\n')
         f.write('set b=%a:' + self.textRoot1.GetValue() + '\\=%\n')
         f.write('set c=%b:"=%\n') # damn that's some ugly syntax.
-        f.write('start /min /wait pre-commands.bat\n')
+        f.write('start /min /wait "pre-commands" "'+prf_name+' pre-commands.bat"\n')
         f.write('unison.exe ' + prf_name + ' -batch=true -path "%c%"\n')
         f.write('if errorlevel 1 pause\n')
         f.write('exit')
@@ -371,7 +371,7 @@ class frameSetup(wx.Frame):
         f.write('set a=%1\n')
         f.write('set b=%a:' + self.textRoot1.GetValue() + '\\=%\n')
         f.write('set c=%b:"=%\n') # damn that's some ugly syntax.
-        f.write('start /min /wait pre-commands.bat\n')
+        f.write('start /min /wait "pre-commands" "'+prf_name+' pre-commands.bat"\n')
         f.write('unison.exe '+prf_name+' -path "%c%"\n')
         f.write('if errorlevel 1 pause\n')
         f.write('exit')
@@ -381,6 +381,11 @@ class frameSetup(wx.Frame):
                             os.getcwdu(),
                             os.path.join(self.sendto, prf_name+' interactive.lnk'))
 
+        # also the pre-commands.bat file
+        if not os.path.exists(prf_name + " pre-commands.bat"):
+            f = open(prf_name + " pre-commands.bat", "w")
+            f.write("\n\n\nexit\n")
+            f.close()
 
 
     def OnButtonDelete(self, event):
@@ -408,6 +413,7 @@ class frameSetup(wx.Frame):
         self.RemoveFile(prf_name+" full interactive.bat")
         self.RemoveFile(prf_name+" directory.bat")
         self.RemoveFile(prf_name+" directory interactive.bat")
+        self.RemoveFile(prf_name+" pre-commands.bat")
 
         # and the links
         self.RemoveFile(os.path.join(self.sendto, prf_name+' interactive.lnk'))
