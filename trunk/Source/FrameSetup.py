@@ -353,7 +353,7 @@ class frameSetup(wx.Frame):
         f = open(output_path, 'w')
         f.write('root = ' + self.textRoot1.GetValue() + '\n')
         f.write('root = ' + self.textRoot2.GetValue() + '\n')
-        f.write(self.textOptions.GetValue() + '\n')
+        f.write(self.textOptions.GetValue())
         f.close()
 
         self.gaugeSaved.SetValue(1)
