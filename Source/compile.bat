@@ -13,5 +13,7 @@ C:\python25\python.exe Makespec.py --onefile --windowed --out=%outdir% %winisond
 C:\python25\python.exe Build.py %outdir%\winison.spec
 
 copy %winisondir%\*.py %outdir%\dist
+copy %winisondir%\Licence.txt %outdir%\dist
+copy %winisondir%\my_version_of_unison %outdir%\dist
 
 pause
