@@ -1,3 +1,5 @@
 Add "log" and "clear log"
 
 Make the directory batch files detect if the Directory is the root directory
+
+Add a save question when the user closes and the green bar is not full.
