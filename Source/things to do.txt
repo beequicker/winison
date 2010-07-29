@@ -3,3 +3,8 @@ Add "log" and "clear log"
 Make the directory batch files detect if the Directory is the root directory
 
 Add a save question when the user closes and the green bar is not full.
+Add a save question when the user presses "GO" and the green bar is not full.
+
+When deleting a profile, make sure it properly selects the next one.
+
+Replace the "Load" button with "Duplicate" (use a string query box to name the new profile)
