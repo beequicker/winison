@@ -23,9 +23,10 @@ def create(parent):
 class frameSetup(wx.Frame):
 
     # paths assembled in LoadUp
-    dot_unison     = None
-    sendto         = None
-    parent         = None
+    dot_unison      = None
+    sendto          = None
+    parent          = None
+    loaded_prf_name = None
 
     def _init_ctrls(self, prnt):
         # generated method, don't edit
@@ -106,6 +107,9 @@ class frameSetup(wx.Frame):
         self.comboBoxProfiles.SetToolTipString('Select a profile')
         self.comboBoxProfiles.Bind(wx.EVT_COMBOBOX, self.OnComboBoxProfiles,
               id=wxID_FRAMESETUPCOMBOBOXPROFILES)
+        self.comboBoxProfiles.Bind(wx.EVT_TEXT, self.OnProfileKey,
+              id=wxID_FRAMESETUPCOMBOBOXPROFILES)
+
 
         self.staticText3 = wx.StaticText(id=wxID_FRAMESETUPSTATICTEXT3,
               label='Profile', name='staticText3', parent=self, pos=wx.Point(8,
@@ -117,14 +121,14 @@ class frameSetup(wx.Frame):
         self.buttonLoad = wx.Button(id=wxID_FRAMESETUPBUTTONLOAD, label='Load',
               name='buttonLoad', parent=self, pos=wx.Point(41, 31),
               size=wx.Size(48, 23), style=0)
-        self.buttonLoad.SetToolTipString('Load the selected profile into the lower fields.')
+        self.buttonLoad.SetToolTipString('Load the selected profile.')
         self.buttonLoad.Bind(wx.EVT_BUTTON, self.OnButtonLoad,
               id=wxID_FRAMESETUPBUTTONLOAD)
 
         self.buttonGo = wx.Button(id=wxID_FRAMESETUPBUTTONGO, label='Go',
               name='buttonGo', parent=self, pos=wx.Point(191, 8),
               size=wx.Size(64, 46), style=0)
-        self.buttonGo.SetToolTipString('Execute selected profile as a background process.')
+        self.buttonGo.SetToolTipString('Execute selected profile.')
         self.buttonGo.SetFont(wx.Font(24, wx.SWISS, wx.NORMAL, wx.BOLD, False,
               'Courier New'))
         self.buttonGo.SetBackgroundColour(wx.Colour(1, 150, 117))
@@ -136,7 +140,7 @@ class frameSetup(wx.Frame):
               label='Interactive', name='checkBoxInteractive', parent=self,
               pos=wx.Point(257, 9), size=wx.Size(70, 13), style=0)
         self.checkBoxInteractive.SetValue(True)
-        self.checkBoxInteractive.SetToolTipString('Check this if you want an interactive Unison sync (as opposed to automatic)')
+        self.checkBoxInteractive.SetToolTipString('Check this if you want an interactive Unison sync (as opposed to automatically accepting changes)')
 
         self.checkBoxQuit = wx.CheckBox(id=wxID_FRAMESETUPCHECKBOXQUIT,
               label='Quit after launching', name='checkBoxQuit', parent=self,
@@ -295,7 +299,7 @@ class frameSetup(wx.Frame):
         self.textOptions.Clear()
 
         # Find the prf file and load it.
-        prf_name = self.comboBoxProfiles.GetValue()
+        prf_name = self.GetPrfName()
         if prf_name == "": return
 
         # read in all the lines
@@ -327,6 +331,20 @@ class frameSetup(wx.Frame):
         # Save it. This makes sure what you see is correctly synced.
         self.OnButtonSave(None)
 
+    def GetPrfName(self):
+        """
+        Get and clean up the Prf name.
+        """
+        # Get whatever garbage the user has typed in there.
+        prf_name    = self.comboBoxProfiles.GetValue()
+
+        # remove all the naughty characters
+        naughty = [' ','\t', '\n', '\\', '/', '|', '*', '<', '>', ':', '"']
+        for c in naughty: prf_name = prf_name.replace(c,'')
+
+        return prf_name
+
+
     def OnButtonSave(self, event):
         """
         Saves the currently-visible data to the various system files and generates
@@ -337,11 +355,8 @@ class frameSetup(wx.Frame):
         self.gaugeSaved.SetValue(0)
 
         # Get whatever garbage the user has typed in there.
-        prf_name    = self.comboBoxProfiles.GetValue()
-
-        # remove all the naughty characters
-        naughty = [' ','\t', '\n', '\\', '/', '|', '*', '<', '>', ':', '"']
-        for c in naughty: prf_name = prf_name.replace(c,'')
+        prf_name = self.GetPrfName()
+        if prf_name == '': return
 
         # if it's a new value, append it!
         if not prf_name in self.comboBoxProfiles.GetStrings():
@@ -426,7 +441,7 @@ class frameSetup(wx.Frame):
             f.close()
 
         self.gaugeSaved.SetValue(7)
-
+        self.loaded_prf_name = prf_name
 
     def OnButtonDelete(self, event):
 
@@ -442,6 +457,7 @@ class frameSetup(wx.Frame):
             i = prf_names.index(prf_name)
             self.comboBoxProfiles.Delete(i)
             self.comboBoxProfiles.Select(0)
+            self.OnComboBoxProfiles(None)
         else: return
 
         # now also remove the actual file
@@ -464,13 +480,24 @@ class frameSetup(wx.Frame):
         d = wx.DirDialog(self)
         if d.ShowModal() == 5100:
             self.textRoot1.SetValue(d.GetPath())
+            self.gaugeSaved.SetValue(0)
 
     def OnButtonBrowse2(self, event):
         d = wx.DirDialog(self)
         if d.ShowModal() == 5100:
             self.textRoot2.SetValue(d.GetPath())
+            self.gaugeSaved.SetValue(0)
 
     def OnFrameSetupClose(self, event=None):
+
+        # get the profile name
+        prf_name = self.GetPrfName()
+
+        # if we're not saved, save
+        if not self.gaugeSaved.GetValue() == self.gaugeSaved.GetRange() and not prf_name == '':
+            if wx.MessageBox("Would you like to save the profile '"+prf_name+"' before quitting?",
+               "Unsaved Changes", wx.YES|wx.NO): self.OnButtonSave(None)
+
 
         # define the controls we want to save
         savies = ["checkBoxQuit", "checkBoxInteractive", "comboBoxProfiles"]
@@ -488,8 +515,13 @@ class frameSetup(wx.Frame):
     def OnButtonGo(self, event):
 
         # get the profile name
-        prf_name = self.comboBoxProfiles.GetValue()
+        prf_name = self.GetPrfName()
         if prf_name=='': return
+
+        # if we're not saved, save
+        if not self.gaugeSaved.GetValue() == self.gaugeSaved.GetRange():
+            if wx.MessageBox("Would you like to save the profile '"+prf_name+"' before running?",
+               "Unsaved Changes", wx.YES|wx.NO): self.OnButtonSave(None)
 
         # Depending on the check boxes, launch the appropriate sync file
         if self.checkBoxInteractive.GetValue(): wx.Execute(prf_name+" full interactive.bat")
@@ -506,7 +538,9 @@ class frameSetup(wx.Frame):
     def OnParameterChange(self, event):
         self.gaugeSaved.SetValue(0)
 
-
+    def OnProfileKey(self,event):
+        if not self.GetPrfName() == self.loaded_prf_name:
+            self.gaugeSaved.SetValue(0)
 
 
 
