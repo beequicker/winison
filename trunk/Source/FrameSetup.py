@@ -525,7 +525,7 @@ class frameSetup(wx.Frame):
 
         # Depending on the check boxes, launch the appropriate sync file
         if self.checkBoxInteractive.GetValue(): wx.Execute(prf_name+" full interactive.bat")
-        else:                                   wx.Execute(prf_name+" full background.bat")
+        else:                                   wx.Execute(prf_name+" full.bat")
 
         # yeah. Quit if we're supposed to.
         if self.checkBoxQuit.GetValue(): self.OnFrameSetupClose(None)
